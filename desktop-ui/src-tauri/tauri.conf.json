@@ -1,0 +1,56 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "WorkPet",
+  "version": "1.0.3",
+  "identifier": "com.workpet.pet",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "pet",
+        "title": "WorkPet",
+        "width": 480,
+        "height": 900,
+        "minWidth": 360,
+        "minHeight": 420,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "center": false,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "icon": [
+      "icons/icon.ico",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/icon.icns"
+    ],
+    "windows": {
+      "nsis": {
+        "installerHooks": "installer.nsi"
+      }
+    },
+    "resources": [
+      "daemon.js",
+      "credit-segments.js",
+      "binaries/node*"
+    ]
+  }
+}

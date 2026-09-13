@@ -1,0 +1,5 @@
+
+# ===== 打包时复制进来的 node 运行时与 JS 脚本（不进 git，CI 从根目录复制）=====
+binaries/node.exe
+daemon.js
+credit-segments.js

@@ -1,0 +1,87 @@
+name: sync-release
+
+# 手动触发的发布页资产同步：把某个构建（默认 main 最新成功构建）的
+# 双平台安装包替换到指定 tag 的 Release（删旧资产 → 传新资产）。
+# 全程在 GitHub runner 上执行（内网下载 artifact，不走本地网络）。
+# 适用场景：正式版发布后协作者又合并了修复 PR，需要让 release 页
+# 的安装包与最新源码保持一致。
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '目标 tag（如 v1.0.3）'
+        required: true
+      run_id:
+        description: 'Actions run id（留空 = main 最新成功构建）'
+        required: false
+        default: ''
+
+jobs:
+  sync-assets:
+    name: Replace release assets from build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read       # 下载 artifacts
+      contents: write     # 删除/上传 release 资产
+    steps:
+      - name: Resolve build run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -n "$INPUT_RUN_ID" ]; then
+            RUN_ID="$INPUT_RUN_ID"
+          else
+            RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id')
+            [ "$RUN_ID" != "null" ] || { echo "main 上没有成功的构建"; exit 1; }
+          fi
+          echo "RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          # 注意：GITHUB_ENV 值含空格会导致后续步骤 unbound variable，只传 SHA
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$RUN_ID" \
+            --jq '"RUN_SHA=" + .head_sha[0:7]' >> "$GITHUB_ENV"
+
+      - name: Download build artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "使用构建 $RUN_ID（commit $RUN_SHA）"
+          mkdir -p dist
+          # gh run download 原生支持按 run + artifact 名下载（自动处理重定向与解压）
+          for name in workpet-windows workpet-macos; do
+            if gh run download "$RUN_ID" --name "$name" --repo "$GITHUB_REPOSITORY" --dir "dist/$name"; then
+              echo "$name: $(find dist/$name -type f -printf '%s %p\n' | sort -rn | head -3)"
+            else
+              echo "缺少 artifact: $name"
+              exit 1
+            fi
+          done
+
+      - name: Replace release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          echo "## Release 资产同步" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 目标 tag: \`$TAG\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- 构建来源: run $RUN_ID（``$RUN_SHA``）" >> "$GITHUB_STEP_SUMMARY"
+
+          SETUP=$(find dist/workpet-windows -type f -name "*-setup.exe" | head -1)
+          DMG=$(find dist/workpet-macos -type f -name "*.dmg" | head -1)
+          [ -n "$SETUP" ] || { echo "windows artifact 里没有 *-setup.exe"; exit 1; }
+          [ -n "$DMG" ] || { echo "macos artifact 里没有 *.dmg"; exit 1; }
+
+          # 删除现有资产（release 必须已存在）
+          for asset_id in $(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$TAG" --jq '.assets[].id'); do
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$asset_id"
+            echo "- 已删除旧资产 $asset_id" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          # 上传新资产
+          gh release upload "$TAG" "$SETUP" "$DMG" --clobber --repo "$GITHUB_REPOSITORY"
+          echo "- 新资产: \`$(basename "$SETUP")\` + \`$(basename "$DMG")\`" >> "$GITHUB_STEP_SUMMARY"
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$TAG" \
+            --jq '.assets[] | "- ✅ \(.name)（\(.size / 1048576 | floor)MB）"' >> "$GITHUB_STEP_SUMMARY"
+          echo "同步完成"

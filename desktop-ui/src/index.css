@@ -1,0 +1,200 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.97 0.002 247.839);
+  --foreground: oklch(0.205 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.577 0.19 258.24);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.96 0.001 247.839);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.96 0.001 247.839);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.96 0.001 247.839);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.916 0.004 286.32);
+  --input: oklch(0.916 0.004 286.32);
+  --ring: oklch(0.577 0.19 258.24);
+  --success: oklch(0.627 0.194 149.214);
+  --warning: oklch(0.666 0.179 58.318);
+}
+
+.dark {
+  --background: oklch(0.2 0.006 285.885);
+  --foreground: oklch(0.967 0.001 286.375);
+  --card: oklch(0.274 0.006 286.033);
+  --card-foreground: oklch(0.967 0.001 286.375);
+  --popover: oklch(0.274 0.006 286.033);
+  --popover-foreground: oklch(0.967 0.001 286.375);
+  --primary: oklch(0.623 0.188 259.815);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.34 0.007 286.021);
+  --secondary-foreground: oklch(0.967 0.001 286.375);
+  --muted: oklch(0.34 0.007 286.021);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.34 0.007 286.021);
+  --accent-foreground: oklch(0.967 0.001 286.375);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.623 0.188 259.815);
+  --success: oklch(0.723 0.219 149.579);
+  --warning: oklch(0.769 0.188 70.08);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-transparent text-foreground antialiased;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei",
+      system-ui, sans-serif;
+    user-select: none;
+    overflow: hidden;
+  }
+}
+
+/* 宠物呼吸浮动 */
+@keyframes pet-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+.animate-pet-bob {
+  animation: pet-bob 3.2s ease-in-out infinite;
+}
+
+/* Fluent 3D 机器人：周期眨眼（眼睛组纵向压扁一下） */
+.pet-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pet-blink 4.6s infinite;
+}
+@keyframes pet-blink {
+  0%,
+  91%,
+  100% {
+    transform: scaleY(1);
+  }
+  93.5%,
+  96% {
+    transform: scaleY(0.08);
+  }
+}
+
+/* 天线圆点呼吸 */
+.pet-antenna {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pet-antenna-pulse 2.4s ease-in-out infinite;
+}
+.pet-antenna-2 {
+  animation-delay: 0.6s;
+}
+@keyframes pet-antenna-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* 脚下光晕：随浮动同步呼吸的椭圆光影 */
+.pet-robot-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 72px;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: radial-gradient(ellipse at center, rgb(124 140 255 / 0.28), transparent 70%);
+  animation: pet-glow 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pet-glow {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: translateX(-50%) scale(0.86);
+  }
+}
+
+@keyframes bubble-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.92);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-bubble-pop {
+  animation: bubble-pop 0.22s ease-out;
+}
+
+/* 面板列表隐藏滚动条（保留滚轮滚动） */
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+[data-radix-scroll-area-viewport] {
+  scrollbar-width: none;
+}
+
+/* 隐藏 Radix ScrollArea 自定义滚动条（滚轮滚动保留） */
+[data-radix-scroll-area-scrollbar] {
+  display: none !important;
+}
